@@ -1,0 +1,29 @@
+{
+  "name": "oc-migrate",
+  "version": "1.0.0",
+  "description": "A CLI tool for helping OC maintainers to migrate between versions",
+  "bin": {
+    "oc-migrate": "./cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matteofigus/oc-migrate.git"
+  },
+  "keywords": [
+    "oc",
+    "opencomponents",
+    "migrate"
+  ],
+  "author": "Matteo Figus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/matteofigus/oc-migrate/issues"
+  },
+  "homepage": "https://github.com/matteofigus/oc-migrate#readme",
+  "dependencies": {
+    "async": "^2.0.0-rc.6",
+    "colors": "^1.1.2",
+    "minimal-request": "^2.0.0",
+    "semver": "^5.2.0"
+  }
+}
