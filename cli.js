@@ -46,13 +46,13 @@ const getHandlebars3Components = (registryUrl, cb) => {
       return cb(null, h3components);
     }
 
-    async.eachSeries(response.components, (component, next) => {
+    async.each(response.components, (component, next) => {
       request({
         url: `${component}/~info`,
         json: true
       }, (err, componentInfo) => {
 
-        if(err){ console.log(err); console.log(componentInfo); return next(err); }
+        if(err){ return next(err); }
 
         const isHandlebars = componentInfo.oc.files.template.type === 'handlebars',
               isHandlebars3 = isHandlebars && (!componentInfo.oc.version || semver.lt(componentInfo.oc.version, '0.32.0')),
@@ -68,13 +68,51 @@ const getHandlebars3Components = (registryUrl, cb) => {
   });
 };
 
+const log = (msg, type) => {
+  const colour = { 'error' : 'red', 'warn': 'yellow', 'ok': 'green' }[type];
+  
+  if(!!colour){
+    msg = colors[colour](msg);
+  }
+
+  return console.log(msg);
+};
+
 const exit = (msg) => {
   if(msg){
-    console.log(colors.red(msg));
+    log(msg, 'error');
     process.exit(1);
   }
 
   process.exit(0);
+};
+
+const checkHandlebars3MigrationIssues = (registryUrl, cb) => {
+
+  log(`Analysing components...`, 'warn');
+
+  getHandlebars3Components(registryUrl, (err, components) => {
+
+    if(err){ return exit(err); }
+    
+    if(components.length > 0){
+
+      log(`Warning: OC v0.33.X removes support for Handlebars 3, and it looks like some of your components will break if you upgrade to >0.33.X.`, 'warn')
+      log(`${registryUrl} will need to be upgraded to 0.32.X, which supports both Handlebars 3 and 4.`, 'warn');
+      log(`Then, the following components will need to be re-published using Handlebars 4. After that, re-run this tool for upgrading ${registryUrl} to a more recent version.`, 'warn');
+      log(`Note: given OC components immutability, after publishing a new version of each component, you will need to ensure no consumer is consuming previous versions`, 'warn');
+
+      _.each(components, (component, i) => {
+        const author = _.isObject(component.author) ? JSON.stringify(component.author) : component.author;
+        const repository = _.isObject(component.repository) ? JSON.stringify(component.repository) : component.repository;
+        log(`${i + 1})\t${component.name}@${component.version} - Maintained by ${author || 'unknown'} ${repository || ''}`, 'error');
+      });
+    } else {
+      log('OK', 'ok');
+    }
+
+    cb();
+  });
 };
 
 getParams((err, registryUrl) => {
@@ -89,49 +127,25 @@ getParams((err, registryUrl) => {
     if(err){ return exit(err); }
 
     if(semver.lt(pkg.version, results.ocMigrateVersion)){
-      exit(`oc-migrate is outdated. For upgrading run: [sudo] npm i -g oc-migrate`);
+      exit(`oc-migrate is outdated. For upgrading run: ${colors.green('[sudo] npm i -g oc-migrate')}`);
     }
 
-    console.log(`Latest OC version: ${colors.green(results.ocVersion)}`);
-    console.log(`${registryUrl} version: ${colors.green(results.registryVersion)}`);
+    log(`Latest OC version: ${colors.green(results.ocVersion)}`);
+    log(`${registryUrl} version: ${colors.green(results.registryVersion)}`);
     
     const diff = semver.diff(results.ocVersion, results.registryVersion);
     const safeUpgrade = (diff === 'patch') || (semver.major(results.ocVersion) > 0 && diff === 'minor');
 
     if(!diff){
-      console.log(colors.green('${registryUrl} is already using latest version. Well done.'));
+      log('${registryUrl} is already using latest version. Well done.', 'ok');
     } else if(safeUpgrade){
-      console.log(colors.green(`${registryUrl} can be safely upgraded from ${results.registryVersion} to ${results.ocVersion}.`));
+      log(`${registryUrl} can be safely upgraded from ${results.registryVersion} to ${results.ocVersion}.`, 'ok');
     } else {
-      console.log(colors.yellow(`${registryUrl} should be upgraded to the latest version, but be careful: breaking changes are listed here: https://github.com/opentable/oc/blob/master/CHANGELOG.md`));
+      log(`${registryUrl} should be upgraded to the latest version, but be careful: breaking changes are listed here: https://github.com/opentable/oc/blob/master/CHANGELOG.md`, 'warn');
     }
 
     if(semver.lt(results.registryVersion, '0.33.0')){
-
-      console.log(colors.yellow(`Analysing components...`));
-
-      getHandlebars3Components(registryUrl, (err, components) => {
-
-        if(err){ return exit(err); }
-        
-        if(components.length > 0){
-
-          console.log(colors.yellow(`Warning: OC v0.33.X removes support for Handlebars 3, and it looks like some of your components will break if you upgrade to >0.33.X.`))
-          console.log(colors.yellow(`${registryUrl} will need to be upgraded to 0.32.X, which supports both Handlebars 3 and 4.`));
-          console.log(colors.yellow(`Then, the following components will need to be re-published using Handlebars 4. After that, re-run this tool for upgrading ${registryUrl} to a more recent version.`));
-          console.log(colors.yellow(`Note: given OC components immutability, after publishing a new version of each component, you will need to ensure no consumer is consuming previous versions`));
-
-          _.each(components, (component, i) => {
-            const author = _.isObject(component.author) ? JSON.stringify(component.author) : component.author;
-            const repository = _.isObject(component.repository) ? JSON.stringify(component.repository) : component.repository;
-            console.log(colors.red(`${i + 1})\t${component.name}@${component.version} - Maintained by ${author || 'unknown'} ${repository || ''}`));
-          });
-        } else {
-          console.log(colors.green('OK'));
-        }
-
-        exit();
-      });
+      checkHandlebars3MigrationIssues(registryUrl, exit);
     } else {
       exit();
     }
