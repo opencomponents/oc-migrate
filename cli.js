@@ -87,7 +87,11 @@ const exit = (msg) => {
   process.exit(0);
 };
 
-const checkHandlebars3MigrationIssues = (registryUrl, cb) => {
+const checkHandlebars3MigrationIssues = (registryUrl, registryVersion, cb) => {
+
+  if(!semver.lt(registryVersion, '0.33.0')){
+    return cb();
+  };
 
   log(`Analysing components...`, 'warn');
 
@@ -98,8 +102,15 @@ const checkHandlebars3MigrationIssues = (registryUrl, cb) => {
     if(components.length > 0){
 
       log(`Warning: OC v0.33.X removes support for Handlebars 3, and it looks like some of your components will break if you upgrade to >0.33.X.`, 'warn')
-      log(`${registryUrl} will need to be upgraded to 0.32.X, which supports both Handlebars 3 and 4.`, 'warn');
-      log(`Then, the following components will need to be re-published using Handlebars 4. After that, re-run this tool for upgrading ${registryUrl} to a more recent version.`, 'warn');
+      
+      if(semver.gte(registryVersion, '0.32.0')){
+        log(`Before upgrading ${registryUrl} to 0.33.X, the following components will need to be re-published using 0.32.X<CLI<0.33.X (which will pick Handlebars 4).`, 'warn');
+      } else {
+        log(`${registryUrl} will need to be upgraded to 0.32.X, which supports both Handlebars 3 and 4.`, 'warn');
+        log(`Only then, the following components will need to be re-published using 0.32.X<CLI<0.33.X (which will pick Handlebars 4).`, 'warn');
+      }
+
+      log(`After that, re-run this tool for upgrading ${registryUrl} to a more recent version.`, 'warn');
       log(`Note: given OC components immutability, after publishing a new version of each component, you will need to ensure no consumer is consuming previous versions`, 'warn');
 
       _.each(components, (component, i) => {
@@ -143,11 +154,7 @@ getParams((err, registryUrl) => {
     } else {
       log(`${registryUrl} should be upgraded to the latest version, but be careful: breaking changes are listed here: https://github.com/opentable/oc/blob/master/CHANGELOG.md`, 'warn');
     }
-
-    if(semver.lt(results.registryVersion, '0.33.0')){
-      checkHandlebars3MigrationIssues(registryUrl, exit);
-    } else {
-      exit();
-    }
+    
+    checkHandlebars3MigrationIssues(registryUrl, results.registryVersion, exit);
   });
 });
