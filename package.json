@@ -1,6 +1,6 @@
 {
   "name": "oc-migrate",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A CLI tool for helping OC maintainers to migrate between versions",
   "bin": {
     "oc-migrate": "./cli.js"
