@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/matteofigus/oc-migrate#readme",
   "dependencies": {
-    "async": "^2.0.1",
+    "async": "^2.2.0",
     "colors": "^1.1.2",
     "lodash": "^4.16.5",
     "minimal-request": "^2.2.0",
