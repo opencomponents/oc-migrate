@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/matteofigus/oc-migrate.git"
+    "url": "git+https://github.com/opencomponents/oc-migrate.git"
   },
   "keywords": [
     "oc",
@@ -17,9 +17,9 @@
   "author": "Matteo Figus",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/matteofigus/oc-migrate/issues"
+    "url": "https://github.com/opencomponents/oc-migrate/issues"
   },
-  "homepage": "https://github.com/matteofigus/oc-migrate#readme",
+  "homepage": "https://github.com/opencomponents/oc-migrate#readme",
   "dependencies": {
     "async": "^2.3.0",
     "colors": "^1.1.2",
