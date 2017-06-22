@@ -1,6 +1,8 @@
 oc-migrate
 ==========
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/opencomponents/oc-migrate.svg)](https://greenkeeper.io/)
+
 A tool for allowing [OpenComponents](https://github.com/opentable/oc) registry/components maintainers to safely migrate between more recent OC's versions.
 
 ### Usage
